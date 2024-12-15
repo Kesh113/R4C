@@ -8,7 +8,7 @@ class Robot(models.Model):
     created = models.DateTimeField(blank=False, null=False)
 
     def save(self, *args, **kwargs):
-        self.serial = f"{self.model}-{self.version}"
+        self.serial = f'{self.model}-{self.version}'
         super().save(*args, **kwargs)
 
     class Meta:

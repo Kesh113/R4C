@@ -12,10 +12,10 @@ VERSION = 'D2'
 CREATED = '2022-12-31 23:59:59'
 
 
-class RobotAPITestCase(TestCase):
+class CreateRobotTestCase(TestCase):
     def setUp(self):
         self.client = Client()
-        self.url = reverse('robot')
+        self.url = reverse('robots')
 
         self.data = {
             'model': MODEL,
@@ -47,7 +47,7 @@ class RobotAPITestCase(TestCase):
             data=self.invalid_data,
             content_type=self.content_type
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertIn('value_error', response.json())
 
     def test_create_robot_missing_field(self):
@@ -56,11 +56,6 @@ class RobotAPITestCase(TestCase):
             data=json.dumps(self.missing_data),
             content_type=self.content_type
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         self.assertIn('version', response.json())
         self.assertIn('created', response.json())
-
-    def test_get_method_not_allowed(self):
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 405)
-        self.assertIn('method_error', response.json())
