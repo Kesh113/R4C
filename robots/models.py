@@ -1,11 +1,23 @@
 from django.db import models
 
+from robots.utils import get_created_date
+
+
+class LastWeekManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            created__gte=get_created_date(7)
+        )
+
 
 class Robot(models.Model):
     serial = models.CharField(max_length=5, blank=False, null=False)
     model = models.CharField(max_length=2, blank=False, null=False)
     version = models.CharField(max_length=2, blank=False, null=False)
     created = models.DateTimeField(blank=False, null=False)
+
+    objects = models.Manager()
+    recent_objects = LastWeekManager()
 
     def save(self, *args, **kwargs):
         self.serial = f'{self.model}-{self.version}'

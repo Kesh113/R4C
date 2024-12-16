@@ -1,42 +1,31 @@
 from collections import defaultdict
-from datetime import timedelta
 from http import HTTPStatus
 import json
 
 from django.db.models import Count
-from django.http import FileResponse, JsonResponse
+from django.http import FileResponse, HttpResponseNotAllowed, JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
+from .constants import INVALID_JSON, CREATE_SUCCESS, FILE_NAME
 from .forms import RobotForm
 from .models import Robot
 from .utils import create_xls_analytics
 
 
-INVALID_JSON = 'Некорректный JSON.'
-CREATE_SUCCESS = 'Робот успешно добавлен в базу данных.'
-INVALID_METHOD = 'Запросы кроме GET и POST запрещены.'
-
-
-HEADER_FORMAT_DATA = {'bold': True, 'bg_color': '#D3D3D3', 'border': 1}
-FILE_HEADERS = ['Модель', 'Версия', 'Количество за неделю']
-FILE_NAME = ('Показатели производства {}.xlsx')
-
-
 def generate_file_name() -> str:
     """Генерирует имя файла с текущей датой."""
-    return FILE_NAME.format(timezone.now().strftime("%d.%m.%Y.%M"))
+    return FILE_NAME.format(timezone.now().strftime("%d.%m.%Y"))
 
 
 @csrf_exempt
 def robots_view(request):
-    """Запрос показателей производства и добавление робота в БД"""
+    """Запрос показателей производства и добавление робота в БД."""
     if request.method == 'GET':
         # Запрашиваем роботов, созданных за последнюю неделю,
         # агрегируем по модели и версии
         last_week_robots = (
-            Robot.objects
-            .filter(created__gte=timezone.now() - timedelta(weeks=1))
+            Robot.recent_objects
             .values('model', 'version')
             .annotate(count=Count('id'))
             .order_by('model', 'version')
@@ -52,12 +41,13 @@ def robots_view(request):
             })
 
         return FileResponse(
-            create_xls_analytics(data, HEADER_FORMAT_DATA, FILE_HEADERS),
+            create_xls_analytics(data),
             as_attachment=True,
             filename=generate_file_name()
         )
 
     elif request.method == 'POST':
+        # Десериализуем полученные данные в словарь
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError:
@@ -66,8 +56,8 @@ def robots_view(request):
                 status=HTTPStatus.BAD_REQUEST
             )
 
+        # Проводим валидацию входных данных
         form = RobotForm(data)
-
         if not form.is_valid():
             return JsonResponse(form.errors, status=HTTPStatus.BAD_REQUEST)
 
@@ -78,6 +68,4 @@ def robots_view(request):
             'serial': robot.serial
         }, status=HTTPStatus.CREATED)
 
-    return JsonResponse(
-        {'method_error': INVALID_METHOD}, status=HTTPStatus.METHOD_NOT_ALLOWED
-    )
+    return HttpResponseNotAllowed(['get', 'post'])

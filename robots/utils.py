@@ -1,44 +1,78 @@
+from datetime import timedelta
 import io
 from typing import Dict, List, Any
 
-import xlsxwriter
+from django.utils import timezone
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
+
+from .constants import SHEET_HEADERS, HEADER_FORMAT_DATA, EMPTY_REPORT
+
+
+def get_format_header() -> tuple[Font, Alignment]:
+    """Определяем формат заголовка"""
+    return Font(
+        bold=HEADER_FORMAT_DATA.get('bold', False),
+        name=HEADER_FORMAT_DATA.get('font_name', 'Calibri'),
+        size=HEADER_FORMAT_DATA.get('font_size', 11)
+    ), Alignment(
+        horizontal=HEADER_FORMAT_DATA.get('horizontal', 'center'),
+        vertical=HEADER_FORMAT_DATA.get('vertical', 'center'),
+        wrap_text=HEADER_FORMAT_DATA.get('wrap_text', False)
+    )
 
 
 def create_xls_analytics(
     data: Dict[str, List[Dict[str, Any]]],
-    header_format_data: Dict[str, Any],
-    headers: List[str]
 ) -> io.BytesIO:
     """Создает Excel-файл с аналитическими данными"""
     # Создаем Excel-файл в памяти
     output = io.BytesIO()
-    xlsx_file = xlsxwriter.Workbook(output, {'in_memory': True})
+    file = Workbook()
 
-    # Определяем формат заголовка
-    header_format = xlsx_file.add_format(header_format_data)
+    if not data:
+        # Если данных нет, сохраняем пустую книгу с одним пустым листом
+        worksheet = file.active
+        worksheet.title = EMPTY_REPORT
+    else:
+        # Удаляем стандартный лист, созданный по умолчанию
+        default_sheet = file.active
+        file.remove(default_sheet)
 
-    for model, versions in data.items():
-        # Добавляем новый лист для модели
-        worksheet = xlsx_file.add_worksheet(model)
+        header_font, header_alignment = get_format_header()
 
-        # Записываем заголовки столбцов
-        for col_num, header in enumerate(headers):
-            worksheet.write(0, col_num, header, header_format)
+        for model, versions in data.items():
+            # Добавляем новый лист для модели
+            worksheet = file.create_sheet(title=model)
 
-        # Записываем данные поверсионно
-        for row_num, version_data in enumerate(versions, start=1):
-            worksheet.write(row_num, 0, model)
-            worksheet.write(row_num, 1, version_data['version'])
-            worksheet.write(row_num, 2, version_data['count'])
+            # Записываем заголовки столбцов
+            for col_num, header in enumerate(SHEET_HEADERS, start=1):
+                cell = worksheet.cell(row=1, column=col_num, value=header)
+                cell.font = header_font
+                cell.alignment = header_alignment
 
-        # Устанавливаем ширину столбцов
-        worksheet.set_column('A:A', 20)
-        worksheet.set_column('B:B', 20)
-        worksheet.set_column('C:C', 25)
+            # Записываем данные поверсионно
+            for row_num, version_data in enumerate(versions, start=2):
+                worksheet.cell(row=row_num, column=1, value=model)
+                worksheet.cell(
+                    row=row_num, column=2, value=version_data.get('version')
+                )
+                worksheet.cell(
+                    row=row_num, column=3, value=version_data.get('count')
+                )
 
-    # Закрываем файл
-    xlsx_file.close()
+            # Устанавливаем ширину столбцов
+            worksheet.column_dimensions['A'].width = 15
+            worksheet.column_dimensions['B'].width = 15
+            worksheet.column_dimensions['C'].width = 25
+
+    # Сохраняем файл в BytesIO
+    file.save(output)
     # Сбрасываем указатель потока на начало
     output.seek(0)
 
     return output
+
+
+def get_created_date(days: int) -> str:
+    return (timezone.now() - timedelta(days=days)).isoformat()
