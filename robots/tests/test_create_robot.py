@@ -1,7 +1,9 @@
 from http import HTTPStatus
 import json
 
-from .fixtures import BaseRobotTest, INVALID_JSON_DATA, CONTENT_TYPE_JSON
+from .fixtures import (
+    BaseRobotTest, INVALID_JSON_DATA, CONTENT_TYPE_JSON, REQUIRED_FIELD
+)
 from robots.models import Robot
 
 
@@ -14,9 +16,9 @@ class CreateRobotTestCase(BaseRobotTest):
             content_type=CONTENT_TYPE_JSON
         )
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
-        self.assertEqual(response.json().get('serial'), self.valid_data_serial)
+        self.assertEqual(response.json().get('serial'), self.valid_serial)
         self.assertIsNotNone(
-            Robot.objects.get(serial=self.valid_data_serial)
+            Robot.objects.get(serial=self.valid_serial)
         )
 
     def test_create_robot_invalid_json(self):
@@ -30,7 +32,7 @@ class CreateRobotTestCase(BaseRobotTest):
         self.assertIn('value_error', response.json())
 
     def test_create_robot_missing_field(self):
-        """Сравниваем недозаполненные обязательными полями тестовые данные
+        """Сравниваем недозаполненные обязательными полями данные
         с полученным ответом."""
         response = self.client.post(
             self.url,
@@ -40,4 +42,6 @@ class CreateRobotTestCase(BaseRobotTest):
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
         response_data = response.json()
         self.assertIn('version', response_data)
+        self.assertEqual(response_data['version'], [REQUIRED_FIELD])
         self.assertIn('created', response_data)
+        self.assertEqual(response_data['created'], [REQUIRED_FIELD])

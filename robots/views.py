@@ -4,18 +4,12 @@ import json
 
 from django.db.models import Count
 from django.http import FileResponse, HttpResponseNotAllowed, JsonResponse
-from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from .constants import INVALID_JSON, CREATE_SUCCESS, FILE_NAME
 from .forms import RobotForm
 from .models import Robot
-from .utils import create_xls_analytics
-
-
-def generate_file_name() -> str:
-    """Генерирует имя файла с текущей датой."""
-    return FILE_NAME.format(timezone.now().strftime("%d.%m.%Y"))
+from .utils import create_xls_analytics, get_text_current_date
 
 
 @csrf_exempt
@@ -43,7 +37,7 @@ def robots_view(request):
         return FileResponse(
             create_xls_analytics(data),
             as_attachment=True,
-            filename=generate_file_name()
+            filename=get_text_current_date(FILE_NAME)
         )
 
     elif request.method == 'POST':

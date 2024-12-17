@@ -1,6 +1,6 @@
 from django.db import models
 
-from robots.utils import get_created_date
+from .utils import get_created_date, get_serial
 
 
 class LastWeekManager(models.Manager):
@@ -20,7 +20,7 @@ class Robot(models.Model):
     recent_objects = LastWeekManager()
 
     def save(self, *args, **kwargs):
-        self.serial = f'{self.model}-{self.version}'
+        self.serial = get_serial(self.model, self.version)
         super().save(*args, **kwargs)
 
     class Meta:

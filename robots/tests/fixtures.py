@@ -2,7 +2,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 
 from robots.models import Robot
-from robots.utils import get_created_date
+from robots.utils import get_created_date, get_serial
 
 
 RECENT_ROBOTS = [
@@ -21,6 +21,8 @@ CONTENT_TYPE_XML = ('application/vnd.openxmlformats-officedocument'
                     '.spreadsheetml.sheet')
 CONTENT_TYPE_JSON = 'application/json'
 
+REQUIRED_FIELD = 'Обязательное поле.'
+
 
 class BaseRobotTest(TestCase):
     """Базовый класс для тестов приложения Robot."""
@@ -29,17 +31,17 @@ class BaseRobotTest(TestCase):
         cls.client = Client()
         cls.url = reverse('robots')
 
-        robot = RECENT_ROBOTS[0]
+        valid_robot = RECENT_ROBOTS[0]
         cls.valid_data = {
-            'model': robot['model'],
-            'version': robot['version'],
-            'created': robot['created']
+            'model': valid_robot['model'],
+            'version': valid_robot['version'],
+            'created': valid_robot['created']
         }
-        cls.valid_data_serial = (
-            f'{cls.valid_data["model"]}-{cls.valid_data["version"]}'
+        cls.valid_serial = get_serial(
+            cls.valid_data['model'], cls.valid_data['version']
         )
 
-        cls.missing_fields_data = {'model': robot['model']}
+        cls.missing_fields_data = {'model': valid_robot['model']}
 
         # Создание роботов
         cls.recent_robots = Robot.objects.bulk_create(

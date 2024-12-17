@@ -10,7 +10,7 @@ from .constants import SHEET_HEADERS, HEADER_FORMAT_DATA, EMPTY_REPORT
 
 
 def get_format_header() -> tuple[Font, Alignment]:
-    """Определяем формат заголовка"""
+    """Определяеn формат заголовка"""
     return Font(
         bold=HEADER_FORMAT_DATA.get('bold', False),
         name=HEADER_FORMAT_DATA.get('font_name', 'Calibri'),
@@ -25,7 +25,7 @@ def get_format_header() -> tuple[Font, Alignment]:
 def create_xls_analytics(
     data: Dict[str, List[Dict[str, Any]]],
 ) -> io.BytesIO:
-    """Создает Excel-файл с аналитическими данными"""
+    """Создает Excel-файл с полученными данными"""
     # Создаем Excel-файл в памяти
     output = io.BytesIO()
     file = Workbook()
@@ -74,5 +74,16 @@ def create_xls_analytics(
     return output
 
 
-def get_created_date(days: int) -> str:
-    return (timezone.now() - timedelta(days=days)).isoformat()
+def get_text_current_date(text) -> str:
+    """Генерирует текст с текущей датой."""
+    return text.format(timezone.now().strftime("%d.%m.%Y"))
+
+
+def get_created_date(days_ago: int = 0) -> str:
+    """Генерирует текст: текущая дата - days_ago."""
+    return (timezone.now() - timedelta(days=days_ago)).isoformat()
+
+
+def get_serial(model: str, version: str) -> str:
+    """Генерирует серийный номер."""
+    return f'{model}-{version}'
