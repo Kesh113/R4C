@@ -1,7 +1,6 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 
-from robots.models import Robot
 from robots.utils import get_created_date, get_serial
 
 
@@ -39,11 +38,4 @@ class BaseRobotTest(TestCase):
         }
         cls.valid_serial = get_serial(
             cls.valid_data['model'], cls.valid_data['version']
-        )
-
-        cls.missing_fields_data = {'model': valid_robot['model']}
-
-        # Создание роботов
-        cls.recent_robots = Robot.objects.bulk_create(
-            (Robot(**robot_data) for robot_data in RECENT_ROBOTS)
         )

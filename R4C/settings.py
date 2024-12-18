@@ -123,3 +123,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Настройка отправки электронной почты
+
+# Запись в консоль
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Отправка сообщения от
+DEFAULT_FROM_EMAIL = 'manager@robotservice.com'

@@ -6,4 +6,4 @@ from robots.models import Robot
 class RobotForm(forms.ModelForm):
     class Meta:
         model = Robot
-        fields = ('model', 'version', 'created')
+        fields = 'model', 'version', 'created'
