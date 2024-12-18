@@ -1,14 +1,14 @@
 import logging
 
+from django.conf import settings
+from django.core.mail import send_mail
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.core.mail import send_mail
-from django.conf import settings
 from django.db import transaction
 
 from .constants import MESSAGE, SUBJECT, UNSUCCESS_SEND_MAIL
-from robots.models import Robot
 from .models import Order
+from robots.models import Robot
 
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ def notify_client_on_robot_creation(sender, instance, created, **kwargs):
 
     # Пытаемся отправить сообщение на email клиента
     try:
-        send_email(customer, instance)
+        send_email(customer.email, instance.model, instance.version)
     except Exception as error:
         # Логирование ошибки при отправке письма
         logger.error(
@@ -49,12 +49,12 @@ def notify_client_on_robot_creation(sender, instance, created, **kwargs):
         order.save()
 
 
-def send_email(customer, robot):
-    """Отправка письма клиенту."""
+def send_email(customer_email, robot_model, robot_version):
+    """Асинхронная отправка письма клиенту."""
     send_mail(
         subject=SUBJECT,
-        message=MESSAGE.format(robot.model, robot.version),
+        message=MESSAGE.format(robot_model, robot_version),
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[customer.email],
+        recipient_list=[customer_email],
         fail_silently=False,
     )

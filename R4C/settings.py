@@ -10,7 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
+from dotenv import load_dotenv, find_dotenv
 import os
+
+
+load_dotenv(find_dotenv())
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -124,9 +128,16 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+
 # Настройка отправки электронной почты
 
-# Запись в консоль
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# Отправка сообщения от
-DEFAULT_FROM_EMAIL = 'manager@robotservice.com'
+# Бэкенд для отправки писем через SMTP
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST = os.getenv('EMAIL_HOST')  # SMTP сервер
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  # Ваш email
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # Пароль от вашего email
+# Адрес отправителя по умолчанию
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

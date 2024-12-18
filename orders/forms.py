@@ -19,7 +19,6 @@ class OrderForm(forms.ModelForm):
         if Order.objects.filter(
             robot_serial=cleaned_data.get('robot_serial'),
             customer__email=cleaned_data.get('email'),
-            status='waiting'
         ).exists():
             self.add_error('email', REPEAT_ORDER)
 
