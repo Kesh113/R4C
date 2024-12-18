@@ -11,10 +11,18 @@ class LastWeekManager(models.Manager):
 
 
 class Robot(models.Model):
+    AVAILABLE_STATUS = [
+        ('booked', 'Забронирован'),
+        ('available', 'Доступен'),
+    ]
+
     serial = models.CharField(max_length=5, blank=False, null=False)
     model = models.CharField(max_length=2, blank=False, null=False)
     version = models.CharField(max_length=2, blank=False, null=False)
     created = models.DateTimeField(blank=False, null=False)
+    status = models.CharField(
+        max_length=10, choices=AVAILABLE_STATUS, default='available'
+    )
 
     objects = models.Manager()
     recent_objects = LastWeekManager()

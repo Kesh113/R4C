@@ -4,12 +4,20 @@ from io import BytesIO
 from django.db.models import Count
 from openpyxl import load_workbook
 
-from .fixtures import BaseRobotTest, CONTENT_TYPE_XML
+from .fixtures import BaseRobotTest, RECENT_ROBOTS, CONTENT_TYPE_XML
 from robots.constants import SHEET_HEADERS, EMPTY_REPORT
 from robots.models import Robot
 
 
 class GetReportViewTest(BaseRobotTest):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        # Создание роботов
+        cls.recent_robots = Robot.objects.bulk_create(
+            (Robot(**robot_data) for robot_data in RECENT_ROBOTS)
+        )
+
     def get_xls_file(self, response):
         return load_workbook(
             filename=BytesIO(
