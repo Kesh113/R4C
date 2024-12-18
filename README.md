@@ -74,7 +74,17 @@ python manage.py runserver
 
 Сервер будет доступен по адресу `http://127.0.0.1:8000/`
 
-6. *Запуск тестов*
+6. *Добавление обязательных переменных окружения*
+
+```bash
+echo "EMAIL_HOST='your_SMTP'" > .env
+echo "EMAIL_HOST_USER='your_email'" >> .env
+echo "EMAIL_HOST_PASSWORD='your_email_pswrd'" >> .env
+```
+
+Все переменные необходимо заполнить личными данными
+
+7. *Запуск тестов*
 
 ```bash
 python manage.py test
